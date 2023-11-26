@@ -5,6 +5,8 @@ public class MiniMaxGame {
 
     public static int positionsEvaluated = 0;
     public static int estimate = 0;
+    public static int minWorst = 1000000;
+    public static int maxWorst = -1000000;
 
     public static void main(String[] args) throws IOException {
         // Check if the correct number of arguments is provided
@@ -29,7 +31,8 @@ public class MiniMaxGame {
             writeBoardToFile(outputFile, newBoard);
             System.out.println(
                     "Input position" + Arrays.toString(board) + " \nOutput Position " + Arrays.toString(newBoard) +
-                            "\nPositions Evaluated by Static Estimation: " + positionsEvaluated + "\nMINIMAX estimate: "
+                            "\nPositions Evaluated by Static Estimation: " + positionsEvaluated
+                            + "\nMINIMAXGame estimate: "
                             + estimate);
 
             System.out.println("The MiniMax algorithm was executed successfully.");
@@ -90,6 +93,9 @@ public class MiniMaxGame {
     }
 
     private static char[] miniMax(Game game, char[] board, int depth, boolean maxPlayer) {
+        // System.out
+        // .println("MiniMax Depth: " + depth + " MaxPlayer: " + maxPlayer + " Board: "
+        // + Arrays.toString(board));
         // We are at the termingal depth
         if (depth == 0) {
             positionsEvaluated += 1;
@@ -102,26 +108,31 @@ public class MiniMaxGame {
 
         // Put a move on the board, do it in each position depending on whos turn it is
         List<char[]> childBoards = maxPlayer ? game.generateMovesMidgameEndgame(board) : game.generateBlackMoves(board);
-        // System.out.println("New one");
-        // for (char[] child : childBoards) {
-        // System.out.println(new String(child));
-        // }
-        char[] bestBoard = childBoards.get(0);
-        int bestScore = game.staticEstimationMidgameEndgame(bestBoard);
+
+        // Best score set to be beyomd the highest possible score for min and beyond the
+        // lowest possible score for max
+        // So that the first board evaluated is always the best one
+        char[] bestBoard = null;
+        int bestScore = maxPlayer ? maxWorst : minWorst;
 
         // Every possible board, let do minimax, and each time find the best board for
         // the player
         for (char[] child : childBoards) {
             char[] result = miniMax(game, child, depth - 1, !maxPlayer);
-            System.out.println("original child :" + Arrays.toString(child));
+
             // This one wants to find the highest score out of all the children
             int childScore = game.staticEstimationMidgameEndgame(result);
-            System.out.println("Score " + childScore + "\t for " + Arrays.toString(result));
+
             if ((maxPlayer && childScore > bestScore) || (!maxPlayer && childScore < bestScore)) {
+
                 bestBoard = child;
                 bestScore = childScore;
             }
 
+        }
+        // In case no move is possible, return the original board
+        if (bestBoard == null) {
+            return board;
         }
 
         return bestBoard;

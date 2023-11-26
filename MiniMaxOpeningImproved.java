@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 
-public class MiniMaxOpening {
+public class MiniMaxOpeningImproved {
 
     public static int positionsEvaluated = 0;
     public static int estimate = 0;
@@ -31,7 +31,8 @@ public class MiniMaxOpening {
             writeBoardToFile(outputFile, newBoard);
             System.out.println(
                     "Input position" + Arrays.toString(board) + " \nOutput Position " + Arrays.toString(newBoard) +
-                            "\nPositions Evaluated by Static Estimation: " + positionsEvaluated + "\nMINIMAX estimate: "
+                            "\nPositions Evaluated by Static Estimation: " + positionsEvaluated
+                            + "\nMINIMAXOpeningImproved estimate: "
                             + estimate);
 
             System.out.println("The MiniMax algorithm was executed successfully.");
@@ -86,13 +87,15 @@ public class MiniMaxOpening {
         // This is a placeholder for the actual MiniMax implementation
         Game game = new Game(board);
         char[] newBoard = miniMax(game, board, depth, true);
-        estimate = game.staticEstimationOpening(newBoard);
+        estimate = game.improvedStaticEstimationOpening(newBoard);
         return newBoard;
 
     }
 
     private static char[] miniMax(Game game, char[] board, int depth, boolean maxPlayer) {
-
+        // System.out
+        // .println("MiniMax Depth: " + depth + " MaxPlayer: " + maxPlayer + " Board: "
+        // + Arrays.toString(board));
         // We are at the termingal depth
         if (depth == 0) {
             positionsEvaluated += 1;
@@ -118,7 +121,7 @@ public class MiniMaxOpening {
             char[] result = miniMax(game, child, depth - 1, !maxPlayer);
 
             // This one wants to find the highest score out of all the children
-            int childScore = game.staticEstimationOpening(result);
+            int childScore = game.improvedStaticEstimationOpening(result);
 
             if ((maxPlayer && childScore > bestScore) || (!maxPlayer && childScore < bestScore)) {
 

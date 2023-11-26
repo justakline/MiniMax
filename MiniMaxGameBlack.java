@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.*;
 
-public class MiniMaxOpening {
+public class MiniMaxGameBlack {
 
     public static int positionsEvaluated = 0;
     public static int estimate = 0;
@@ -31,10 +31,11 @@ public class MiniMaxOpening {
             writeBoardToFile(outputFile, newBoard);
             System.out.println(
                     "Input position" + Arrays.toString(board) + " \nOutput Position " + Arrays.toString(newBoard) +
-                            "\nPositions Evaluated by Static Estimation: " + positionsEvaluated + "\nMINIMAX estimate: "
+                            "\nPositions Evaluated by Static Estimation: " + positionsEvaluated
+                            + "\nMINIMAXBlackGame estimate: "
                             + estimate);
 
-            System.out.println("The MiniMax algorithm was executed successfully.");
+            System.out.println("The MiniMaxBlack algorithm was executed successfully.");
         } catch (IOException e) {
             System.err.println("An error occurred while reading or writing files: " + e.getMessage());
             e.printStackTrace();
@@ -85,8 +86,8 @@ public class MiniMaxOpening {
         // Implement the MiniMax algorithm for the opening phase here
         // This is a placeholder for the actual MiniMax implementation
         Game game = new Game(board);
-        char[] newBoard = miniMax(game, board, depth, true);
-        estimate = game.staticEstimationOpening(newBoard);
+        char[] newBoard = miniMax(game, board, depth, false);
+        estimate = game.staticEstimationMidgameEndgame(newBoard);
         return newBoard;
 
     }
@@ -104,7 +105,7 @@ public class MiniMaxOpening {
         // We need to maximize it for us
 
         // Put a move on the board, do it in each position depending on whos turn it is
-        List<char[]> childBoards = maxPlayer ? game.generateMovesOpening(board) : game.generateBlackMoves(board);
+        List<char[]> childBoards = maxPlayer ? game.generateMovesMidgameEndgame(board) : game.generateBlackMoves(board);
 
         // Best score set to be beyomd the highest possible score for min and beyond the
         // lowest possible score for max
@@ -118,7 +119,7 @@ public class MiniMaxOpening {
             char[] result = miniMax(game, child, depth - 1, !maxPlayer);
 
             // This one wants to find the highest score out of all the children
-            int childScore = game.staticEstimationOpening(result);
+            int childScore = game.staticEstimationMidgameEndgame(result);
 
             if ((maxPlayer && childScore > bestScore) || (!maxPlayer && childScore < bestScore)) {
 

@@ -10,6 +10,13 @@ public class Game {
 
     // Game board representation
     private char[] board;
+    public int[][] millCombinations = {
+            { 0, 1, 2 }, { 3, 4, 5 }, { 8, 9, 10 }, { 11, 12, 13 }, // Horizontal mills
+            { 14, 15, 16 }, { 17, 18, 19 }, { 20, 21, 22 },
+            { 0, 8, 20 }, { 3, 9, 17 }, { 6, 10, 14 }, { 7, 11, 16 }, // Vertical Mills
+            { 5, 12, 19 }, { 2, 13, 22 },
+            { 0, 3, 6 }, { 2, 5, 7 }, { 20, 17, 15 }, { 22, 19, 16 } // Diagnoal Mills
+    };
 
     public Game() {
         // Initialize the game board here
@@ -23,6 +30,20 @@ public class Game {
 
     public char[] getBoard() {
         return copyBoard(board);
+    }
+
+    public List<char[]> generateBlackOpeningkMoves(char[] b) {
+        char[] tempB = copyBoard(b);
+        // Swap colors to white so algorithm works
+        tempB = swapColors(tempB);
+        // Generate opening
+        List<char[]> openingWhiteMoves = generateMovesOpening(tempB);
+        // Swap all the opening moves back to black
+        List<char[]> openingBlackMoves = new ArrayList<char[]>();
+        for (char[] move : openingWhiteMoves) {
+            openingBlackMoves.add(swapColors(move));
+        }
+        return openingBlackMoves;
     }
 
     // Main game logic methods
@@ -39,17 +60,7 @@ public class Game {
             list.set(i, swapColors(list.get(i)));
         }
 
-        // System.out.println("After 2. ");
-        // for (char[] blackMove : list) {
-        // System.out.println(Arrays.toString(blackMove));
-        // }
-
         return list;
-        // Swap colors and generate moves for white, then swap back
-        // 1. Compute tempb
-        // 2. Generate moves for tempb
-        // 3. Swap colors back
-        // return new List<char[]>;
     }
 
     public char[] swapColors(char[] b) {
@@ -257,13 +268,6 @@ public class Game {
         char color = newBoard[location];
         if (color == EMPTY)
             return false;
-        int[][] millCombinations = {
-                { 0, 1, 2 }, { 3, 4, 5 }, { 8, 9, 10 }, { 11, 12, 13 }, // Horizontal mills
-                { 14, 15, 16 }, { 17, 18, 19 }, { 20, 21, 22 },
-                { 0, 8, 20 }, { 3, 9, 17 }, { 6, 10, 14 }, { 7, 11, 16 }, // Vertical Mills
-                { 5, 12, 19 }, { 2, 13, 22 },
-                { 0, 3, 6 }, { 2, 5, 7 }, { 20, 17, 15 }, { 22, 19, 16 } // Diagnoal Mills
-        };
 
         // Check every combination, if a piece in the comvination is empty then you know
         // its not three in a row
@@ -308,6 +312,49 @@ public class Game {
     // Static estimation for Opening
     public int staticEstimationOpening(char[] b) {
         return calculateColorPieces(WHITE_PIECE, b) - calculateColorPieces(BLACK_PIECE, b);
+    }
+
+    // Static estimation for MidgameEndgame
+    // The more mills you have the better off you tend to be
+    public int improvedStaticEstimationMidgameEndgame(char[] b) {
+        int whitePieces = calculateColorPieces(WHITE_PIECE, b);
+        int whiteMills = numberOfMills(WHITE_PIECE);
+        int blackPieces = calculateColorPieces(BLACK_PIECE, b);
+        int blackMills = numberOfMills(BLACK_PIECE);
+        int blackMoves = generateBlackMoves(b).size();
+        if (blackPieces <= 2)
+            return 10000;
+        else if (whitePieces <= 2)
+            return -10000;
+        else if (blackMoves == 0)
+            return 10000;
+        return (1000 * ((whitePieces * (1 + whiteMills)) - (blackPieces * (1 + blackMills)))) - blackMoves;
+    }
+
+    public int improvedStaticEstimationOpening(char[] b) {
+        int whitePieces = calculateColorPieces(WHITE_PIECE, b);
+        int whiteMills = numberOfMills(WHITE_PIECE);
+        int blackPieces = calculateColorPieces(BLACK_PIECE, b);
+        int blackMills = numberOfMills(BLACK_PIECE);
+        return (whitePieces * whiteMills) - (blackPieces * blackMills);
+    }
+
+    public int numberOfMills(char piece) {
+        int count = 0;
+        for (int[] mill : millCombinations) {
+            for (int i = 0; i < mill.length; i++) {
+                // We know a mill. check if there are 3 pieces of the color in that mill. If not
+                // check the next mill
+                // If we get ppassed the third one, ie i==2, then we know we have a mill
+                if (board[mill[i]] != piece) {
+                    break;
+                }
+                if (i == 2) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 
     private int calculateColorPieces(char color, char[] b) {
